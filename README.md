@@ -1,838 +1,334 @@
-# ISO Certified Manufacturing ERP Architecture
+# ISO সার্টিফিকেটপ্রাপ্ত ম্যানুফ্যাকচারিং ERP আর্কিটেকচার ও ইমপ্লিমেন্টেশন গাইড
 
-```
-Engineering
-        │
-        ▼
-Product Master
-        │
-        ▼
-Bill of Materials (BOM)
-        │
-        ▼
-Routing / Process Routing
-        │
-        ▼
-Production Planning
-        │
-        ▼
-Material Requirement Planning (MRP)
-        │
-        ▼
-Purchase Requisition
-        │
-        ▼
-Purchase Order
-        │
-        ▼
-Purchase Receive
-        │
-        ▼
-Raw Material Inventory
-        │
-        ▼
-Production Order / Work Order
-        │
-        ▼
-Material Reservation
-        │
-        ▼
-Material Issue
-        │
-        ▼
-Production Execution
-        │
-        ▼
-Work In Progress (WIP)
-        │
-        ▼
-In Process QC
-        │
-        ▼
-Production Completion
-        │
-        ▼
-Finished Goods QC
-        │
-        ▼
-Finished Goods Receive
-        │
-        ▼
-Finished Goods Inventory
-        │
-        ▼
-Sales
+> আইএসও (ISO) স্ট্যান্ডার্ড অনুযায়ী এন্টারপ্রাইজ-গ্রেড ম্যানুফ্যাকচারিং ERP সিস্টেম তৈরির একটি পূর্ণাঙ্গ ও প্রফেশনাল ব্লুপ্রিন্ট।
+
+---
+
+## 📌 সূচিপত্র (Table of Contents)
+
+- [১. আর্কিটেকচার ওভারভিউ (Mermaid ডায়াগ্রাম)](#১-আর্কিটেকচার-ওভারভিউ-mermaid-ডায়াগ্রাম)
+- [২. ফেজ-বাই-ফেজ ইমপ্লিমেন্টেশন রোডম্যাপ](#২-ফেজ-বাই-ফেজ-ইমপ্লিমেন্টেশন-রোডম্যাপ)
+- [৩. স্ট্যান্ডার্ড ম্যানুফ্যাকচারিং মডিউল স্ট্রাকচার](#৩-স্ট্যান্ডার্ড-ম্যানুফ্যাকচারিং-মডিউল-স্ট্রাকচার)
+- [৪. সম্পূর্ণ ম্যানুফ্যাকচারিং ওয়ার্কফ্লো](#৪-সম্পূর্ণ-ম্যানুফ্যাকচারিং-ওয়ার্কফ্লো)
+- [৫. বিল অব ম্যাটেরিয়ালস (BOM) স্ট্রাকচার](#৫-বিল-অব-ম্যাটেরিয়ালস-bom-স্ট্রাকচার)
+- [৬. ম্যাটেরিয়াল রিকোয়ারমেন্ট প্ল্যানিং (MRP Engine)](#৬-ম্যাটেরিয়াল-রিকোয়ারমেন্ট-প্ল্যানিং-mrp-engine)
+- [৭. পারচেজ রিকুইজিশন ও প্রকিউরমেন্ট (Procurement)](#৭-পারচেজ-রিকুইজিশন-ও-প্রকিউরমেন্ট-procurement)
+- [৮. ইনভেন্টরি মুভমেন্ট ও ওয়্যারহাউজ ম্যাট্রিক্স](#৮-ইনভেন্টরি-মুভমেন্ট-ও-ওয়্যারহাউজ-ম্যাট্রিক্স)
+- [৯. ওয়ার্ক অর্ডার ও শপ ফ্লোর কন্ট্রোল (Shop Floor Execution)](#৯-ওয়ার্ক-অর্ডার-ও-শপ-ফ্লোর-কন্ট্রোল-shop-floor-execution)
+- [১০. ৩-স্টেজ কোয়ালিটি কন্ট্রোল (Quality Control - QC)](#১০-৩-স্টেজ-কোয়ালিটি-কন্ট্রোল-quality-control---qc)
+- [১১. ব্যাচ ম্যানেজমেন্ট ও ট্রেসেবিলিটি (Traceability)](#১১-ব্যাচ-ম্যানেজমেন্ট-ও-ট্রেসেবিলিটি-traceability)
+- [১২. ম্যানুফ্যাকচারিং কস্টিং ইঞ্জিন (Costing Engine)](#১২-ম্যানুফ্যাকচারিং-কস্টিং-ইঞ্জিন-costing-engine)
+- [১৩. সম্পূর্ণ মডিউল রিলেশনশিপ আর্কিটেকচার](#১৩-সম্পূর্ণ-মডিউল-রিলেশনশিপ-আর্কিটেকচার)
+- [১৪. আইএসও (ISO) এন্টারপ্রাইজ বেস্ট প্র্যাকটিস](#১৪-আইএসও-iso-এন্টারপ্রাইজ-বেস্ট-প্র্যাকটিস)
+
+---
+
+## ১. আর্কিটেকচার ওভারভিউ (Mermaid ডায়াগ্রাম)
+
+```mermaid
+flowchart TD
+    Engineering[ইনজিনিয়ারিং মাস্টার ডাটা] --> ProductMaster[প্রোডাক্ট মাস্টার ও স্পেসিফিকেশন]
+    ProductMaster --> BOM[বিল অব ম্যাটেরিয়ালস - BOM]
+    BOM --> Routing[প্রসেস রাউটিং ও অপারেশনস]
+    Routing --> Planning[প্রোডাকশন প্ল্যানিং ও MPS]
+    Planning --> MRP[ম্যাটেরিয়াল রিকোয়ারমেন্ট প্ল্যানিং - MRP]
+    
+    MRP --> ShortageCheck{কাঁচামালের ঘাটতি আছে?}
+    ShortageCheck -- ঘাটতি পাওয়া গেছে --> PR[পারচেজ রিকুইজিশন]
+    PR --> PO[পারচেজ অর্ডার]
+    PO --> PRcv[পারচেজ রিসিভ / মালামাল গ্রহণ]
+    PRcv --> IncomingQC{ইনকামিং QC পরীক্ষা}
+    IncomingQC -- পাস --> RMStore[র ম্যাটেরিয়াল স্টোর]
+    
+    ShortageCheck -- পর্যাপ্ত স্টক আছে --> StockRes[ম্যাটেরিয়াল রিজার্ভেশন]
+    RMStore --> StockRes
+    
+    StockRes --> WO[প্রোডাকশন ওয়ার্ক অর্ডার]
+    WO --> MatIssue[কারখানায় ম্যাটেরিয়াল ইস্যু]
+    MatIssue --> ProdExec[উৎপাদন প্রক্রিয়া / শপ ফ্লোর]
+    ProdExec --> WIP[ওয়ার্ক ইন প্রোগ্রেস - WIP]
+    
+    WIP --> InProcQC{ইন-প্রসেস QC পরীক্ষা}
+    InProcQC -- পাস --> Completion[উৎপাদন সম্পন্ন]
+    InProcQC -- রিওয়ার্ক --> ProdExec
+    
+    Completion --> FinalQC{ফিনিশড গুডস QC পরীক্ষা}
+    FinalQC -- পাস --> FGStore[ফিনিশড গুডস ইনভেন্টরি]
+    FinalQC -- রিজেক্ট --> Scrap[স্ক্র্যাপ / রিজেক্ট ওয়্যারহাউজ]
+    
+    FGStore --> Sales[বিক্রয় ও গ্রাহকের কাছে ডেলিভারি]
 ```
 
 ---
 
-# ১. Standard Manufacturing Module Structure
+## ২. ফেজ-বাই-ফেজ ইমপ্লিমেন্টেশন রোডম্যাপ
 
-Enterprise Manufacturing ERP-এ সাধারণত নিচের Modules থাকে।
+ডেভেলপমেন্ট টিম যাতে ধাপে ধাপে এবং কোনো রকম বিভ্রান্তি ছাড়াই সফটওয়্যারটি তৈরি করতে পারে, তার জন্য পুরো আর্কিটেকচারকে ৪টি ফেজে ভাগ করা হয়েছে:
 
-## A. Engineering Master
-
-এখানে Product Definition থাকে।
-
-* Product Master
-* Product Specification
-* Product Version
-* Formula / Recipe
-* BOM
-* Routing
-* Operation Sequence
-* Work Center
-* Machine Master
-* Tool Master
+| ফেজ (Phase) | মডিউলের পরিধি (Scope) | মূল ডেলিভারেবলসমূহ (Deliverables) | বিস্তারিত গাইড ডকুমেন্ট |
+| :--- | :--- | :--- | :--- |
+| **Phase 1** | **মাস্টার ডাটা ও ইনভেন্টরি** | প্রোডাক্ট মাস্টার, BOM ভার্সনিং, রাউটিং, ওয়ার্ক সেন্টার, RM ও FG স্টোর | 📘 [Module 01 গাইডলাইন](./docs/01-master-data-inventory.md) |
+| **Phase 2** | **প্রোডাকশন এক্সিকিউশন** | ওয়ার্ক অর্ডার লাইফসাইকেল, ম্যাটেরিয়াল রিজার্ভেশন, ইস্যু, WIP ও EBR | 📗 [Module 02 গাইডলাইন](./docs/02-production-execution.md) |
+| **Phase 3** | **MRP ও প্রকিউরমেন্ট** | সেলস ফোরকাস্ট, MPS, MRP ক্যালকুলেশন ইঞ্জিন, পারচেজ রিকুইজিশন | 📙 [Module 03 গাইডলাইন](./docs/03-mrp-procurement.md) |
+| **Phase 4** | **QC, কস্টিং ও ISO অডিট** | ৩-স্টেজ QC, ইউনিট কস্টিং ইঞ্জিন, ট্র্যাকিং/ট্রেসেবিলিটি ও অডিট লগ | 📕 [Module 04 গাইডলাইন](./docs/04-qc-costing-iso.md) |
 
 ---
 
-## B. Planning
+## ৩. স্ট্যান্ডার্ড ম্যানুফ্যাকচারিং মডিউল স্ট্রাকচার
 
-এখানে Production Plan তৈরি হয়।
+একটি এন্টারপ্রাইজ ম্যানুফ্যাকচারিং ERP-তে প্রধানত নিচের ৯টি সাব-সিস্টেম বা মডিউল থাকে:
 
-* Demand Planning
-* Sales Forecast
-* Master Production Schedule (MPS)
-* Production Planning
-* Capacity Planning
-* Material Requirement Planning (MRP)
+### A. ইঞ্জিনিয়ারিং মাস্টার (Engineering Master) — [বিস্তারিত গাইড ➔](./docs/01-master-data-inventory.md)
+* প্রোডাক্ট মাস্টার ও টেকনিক্যাল স্পেসিফিকেশন
+* প্রোডাক্ট ভার্সন ও ইসিএন/ইসিও (ECN/ECO Revision)
+* রেসিপি / ফর্মুলা ম্যানেজমেন্ট
+* বিল অব ম্যাটেরিয়ালস (BOM)
+* প্রসেস রাউটিং ও অপারেশনের ক্রম
+* ওয়ার্ক সেন্টার ও মেশিন মাস্টার
+* টুলস ও ইকুইপমেন্ট মাস্টার
 
----
+### B. প্ল্যানিং লেয়ার (Planning) — [বিস্তারিত গাইড ➔](./docs/03-mrp-procurement.md)
+* ডিম্যান্ড প্ল্যানিং ও সেলস ফোরকাস্ট (Sales Forecast)
+* মাস্টার প্রোডাকশন শিডিউল (MPS)
+* প্রোডাকশন ক্যাপাসিটি প্ল্যানিং (CRP)
+* ম্যাটেরিয়াল রিকোয়ারমেন্ট প্ল্যানিং (MRP Engine)
 
-## C. Procurement Integration
+### C. প্রকিউরমেন্ট ইন্টিগ্রেশন (Procurement Integration) — [বিস্তারিত গাইড ➔](./docs/03-mrp-procurement.md)
+* অটোমেটিক পারচেজ রিকুইজিশন (MRP ও Min-Stock থেকে)
+* পারচেজ রিকুইজিশন অ্যাপ্রুভাল ওয়ার্কফ্লো
+* পারচেজ অর্ডার (PO) ও গুডস রিসিভ (GRN)
 
-MRP যদি Material Shortage দেখায় তাহলে
+### D. প্রোডাকশন এক্সিকিউশন (Production Execution) — [বিস্তারিত গাইড ➔](./docs/02-production-execution.md)
+* ওয়ার্ক অর্ডার তৈরি ও স্ট্যাটাস লাইফসাইকেল
+* ব্যাচ প্রোডাকশন ও মেশিন অ্যালোকেশন
+* ম্যাটেরিয়াল রিজার্ভেশন ও ম্যাটেরিয়াল ইস্যু
+* অপারেটর ও লেবার শিফট অ্যালোকেশন
+* শপ ফ্লোর এন্ট্রি ও ব্যাচ সম্পন্নকরণ
 
-* Purchase Requisition
-* Purchase Approval
-* Purchase Order
+### E. ইনভেন্টরি মুভমেন্ট ও ওয়্যারহাউজ (Inventory) — [বিস্তারিত গাইড ➔](./docs/01-master-data-inventory.md)
+* কাঁচামাল বা র ম্যাটেরিয়াল স্টোর (RM Store)
+* রিজার্ভড স্টক ট্র্যাকিং (Reserved Stock)
+* প্রোডাকশন ইস্যু ও ওয়ার্ক-ইন-প্রোগ্রেস (WIP)
+* ফিনিশড গুডস স্টোর (FG Store)
+* রিজেক্ট, স্ক্র্যাপ ও রিওয়ার্ক ওয়্যারহাউজ
 
-শুরু হয়।
+### F. কোয়ালিটি ম্যানেজমেন্ট (Quality Management) — [বিস্তারিত গাইড ➔](./docs/04-qc-costing-iso.md)
+* ইনকামিং মালামাল কোয়ালিটি চেক (Incoming QC)
+* প্রসেস চলাকালীন কোয়ালিটি চেক (In-Process QC)
+* ফাইনাল প্রোডাক্ট কোয়ালিটি চেক (Final FG QC)
+* ল্যাবরেটরি টেস্ট ও সার্টিফাইড রিপোর্ট (CoA Logging)
 
----
+### G. ম্যানুফ্যাকচারিং কস্টিং (Costing Engine) — [বিস্তারিত গাইড ➔](./docs/04-qc-costing-iso.md)
+* স্ট্যান্ডার্ড কস্ট বনাম একচুয়াল কস্ট বিশ্লেষণ
+* ব্যাচ কস্টিং হিসাব (Batch Costing)
+* ডাইরেক্ট লেবার ও মেশিন অবচয় খরচ
+* ফ্যাক্টরি ওভারহেড ও বিদ্যুৎ বিল বণ্টন
+* অপচয় বা স্ক্র্যাপ কস্ট হিসাব
 
-## D. Production Execution
+### H. ট্রেসেবিলিটি ও ব্যাচ ট্র্যাকিং (Traceability) — [বিস্তারিত গাইড ➔](./docs/04-qc-costing-iso.md)
+* ইউনিক ব্যাচ ও লট নম্বর জেনারেটর (Lot ID)
+* সিরিয়াল নম্বর ট্র্যাকিং
+* উৎপাদন ও মেয়াদোত্তীর্ণের তারিখ (Mfg & Expiry Date)
+* রিকল ম্যানেজমেন্ট (Product Recall Workflow)
 
-এটি Factory Floor-এর Main Module।
-
-* Work Order
-* Batch Production
-* Material Reservation
-* Material Issue
-* Shop Floor Execution
-* Machine Allocation
-* Labor Allocation
-* Production Entry
-* Production Completion
-
----
-
-## E. Inventory Movement
-
-* Raw Material Store
-* Reserved Material
-* Production Issue
-* WIP
-* Finished Goods
-* Scrap
-* Reject
-* Rework
-* Return Material
-
----
-
-## F. Quality Management
-
-* Incoming QC
-* In Process QC
-* Final QC
-* Laboratory Test
-* Rework
-* Reject
-
----
-
-## G. Costing
-
-* Standard Cost
-* Actual Cost
-* Batch Cost
-* Machine Cost
-* Labor Cost
-* Overhead
-* Electricity
-* Packaging
-* Waste Cost
+### I. রিপোর্টস ও অ্যানালিটিক্স (Reports & Analytics)
+* প্রোডাকশন আউটপুট ও কর্মদক্ষতা রিপোর্ট
+* মেশিন ইউটিলাইজেশন ও OEE (Overall Equipment Effectiveness)
+* ম্যাটেরিয়াল ইল্ড ও ভ্যারিয়েন্স অ্যানালাইসিস (Yield Analysis)
+* ব্যাচ হিস্ট্রি ও কস্ট অ্যানালাইসিস রিপোর্ট
 
 ---
 
-## H. Traceability
+## ৪. সম্পূর্ণ ম্যানুফ্যাকচারিং ওয়ার্কফ্লো
 
-* Batch Management
-* Lot Management
-* Serial Number
-* Manufacturing Date
-* Expiry Date
-* Recall Management
-
----
-
-## I. Reports
-
-* Production Report
-* Machine Utilization
-* Material Consumption
-* Yield Analysis
-* Waste Analysis
-* OEE
-* Batch History
-* Traceability Report
-* Cost Analysis
-
----
-
-# ২. Complete Manufacturing Workflow
-
-বাস্তব Enterprise Factory-তে Flow সাধারণত নিচের মতো হয়।
-
-```
-Customer Demand
-        │
-Sales Forecast
-        │
-Production Planning
-        │
-Master Production Schedule
-        │
-MRP Run
-        │
-Material Availability Check
-        │
- ├───────────────┐
- │Enough Stock   │
- │               │
- ▼               ▼
-Reserve Stock   Purchase Requisition
-                │
-                ▼
-         Purchase Order
-                │
-                ▼
-        Purchase Receive
-                │
-                ▼
-      Raw Material Inventory
-                │
-                ▼
-        Production Work Order
-                │
-                ▼
-        Material Reservation
-                │
-                ▼
-          Material Issue
-                │
-                ▼
-      Production Execution
-                │
-                ▼
-       Work In Progress
-                │
-                ▼
-       In Process QC
-                │
-      ┌─────────┴─────────┐
-      │                   │
-      ▼                   ▼
-    Pass                Rework
-      │                   │
-      └─────────┬─────────┘
-                ▼
-     Production Completion
-                │
-                ▼
-       Finished Goods QC
-                │
-      ┌─────────┴─────────┐
-      │                   │
-      ▼                   ▼
-    Pass               Reject
-      │                   │
-      ▼                   ▼
-Finished Goods      Scrap/Rework
-Inventory
-      │
-      ▼
-Sales
+```mermaid
+flowchart TD
+    Demand[গ্রাহকের চাহিদা / ফোরকাস্ট] --> MPS[মাস্টার প্রোডাকশন শিডিউল]
+    MPS --> MRP[ম্যাটেরিয়াল রিকোয়ারমেন্ট প্ল্যানিং - MRP]
+    MRP --> AvailCheck{পর্যাপ্ত কাঁচামাল আছে?}
+    
+    AvailCheck -- না --> PR[পারচেজ রিকুইজিশন]
+    PR --> PO[পারচেজ অর্ডার]
+    PO --> PRcv[মালামাল রিসিভ]
+    PRcv --> IncomingQC{ইনকামিং QC পরীক্ষা}
+    IncomingQC -- পাস --> RMStore[র ম্যাটেরিয়াল স্টোর]
+    
+    AvailCheck -- হ্যাঁ --> Reserve[মালামাল রিজার্ভ করুন]
+    RMStore --> Reserve
+    
+    Reserve --> WO[ওয়ার্ক অর্ডার ইস্যু]
+    WO --> IssueMat[ফ্লোরে ম্যাটেরিয়াল ইস্যু]
+    IssueMat --> ShopFloor[উৎপাদন প্রক্রিয়া শুরু]
+    
+    ShopFloor --> InQC{চলতি অবস্থায় QC পরীক্ষা}
+    InQC -- পাস --> Complete[উৎপাদন সম্পন্ন]
+    InQC -- ত্রুটি আছে --> Rework[রিওয়ার্ক স্টেশন]
+    Rework --> ShopFloor
+    
+    Complete --> FinalQC{ফিনিশড গুডস QC পরীক্ষা}
+    FinalQC -- পাস --> FGStore[ফিনিশড গুডস ইনভেন্টরি]
+    FinalQC -- রিজেক্ট --> Scrap[স্ক্র্যাপ / রিজেক্ট স্টোর]
+    
+    FGStore --> Dispatch[বিক্রয় ও ডেলিভারি]
 ```
 
 ---
 
-# ৩. BOM (Bill of Materials)
+## ৫. বিল অব ম্যাটেরিয়ালস (BOM) স্ট্রাকচার
 
-BOM হলো একটি Product তৈরির Standard Recipe এবং Structure।
+BOM হলো একটি প্রোডাক্ট তৈরির স্ট্যান্ডার্ড রেসিপি এবং উপকরণের তালিকা। (বিস্তারিত: [Module 01 Spec Guide](./docs/01-master-data-inventory.md))
 
-Biscuit-এর উদাহরণ:
-
-```
-Finished Product
-
-Butter Biscuit 200 gm
-
-Batch Size
-1000 Packet
-
-Yield
-980 Packet
-
-Expected Waste
-2%
-
-Ingredients
-
-Flour
-Sugar
-Salt
-Milk Powder
-Butter
-Oil
-Baking Powder
-Flavor
-
-Packaging
-
-Printed Packet
-Inner Wrapper
-Carton
-Label
-Tape
-```
-
-কিন্তু Enterprise ERP-এ BOM শুধু Raw Material List নয়।
-
-এতে আরও থাকে—
-
-* Version
-* Effective Date
-* Revision
-* Alternative BOM
-* UOM
-* Batch Size
-* Standard Yield
-* Scrap %
-* By Product
-* Co Product
+### বাস্তব উদাহরণ (বিস্কুট ম্যানুফ্যাকচারিং):
+* **ফিনিশড প্রোডাক্ট (FG):** বাটার বিস্কুট ২০০ গ্রাম
+* **স্ট্যান্ডার্ড ব্যাচ সাইজ:** ১,০০০ প্যাকেট
+* **প্রত্যাশিত উৎপাদিকা (Standard Yield):** ৯৮০ প্যাকেট (২% সম্ভাব্য অপচয়)
+* **কাঁচামাল (Raw Ingredients):** ময়দা, চিনি, লবণ, গুঁড়ো দুধ, মাখন, তেল, বেকিং পাউডার, ফ্লেভার
+* **প্যাকিং উপাদান (Packaging Material):** প্রিন্টেড প্যাকেট, ইনার র‍্যাপার, কার্টন, লেবেল, টেপ
 
 ---
 
-# ৪. Material Requirement Planning (MRP)
+## ৬. ম্যাটেরিয়াল রিকোয়ারমেন্ট প্ল্যানিং (MRP Engine)
 
-ধরি
+ম্যাটেরিয়াল রিকোয়ারমেন্ট প্ল্যানিং ইনভেন্টরি ঘাটতি নির্ধারণ করে। (বিস্তারিত: [Module 03 Spec Guide](./docs/03-mrp-procurement.md))
 
-১ Packet Biscuit-এর BOM অনুযায়ী লাগে
-
-```
-Flour = 250 gm
-
-Sugar = 50 gm
-
-Oil = 20 gm
-
-Milk Powder = 10 gm
+```mermaid
+graph LR
+    Gross[মোট প্রয়োজনীয় কাঁচামাল] --> Check[বর্তমান ইনভেন্টরি চেক]
+    Check --> DeductRes[রিজার্ভড স্টক বিয়োগ করুন]
+    DeductRes --> Shortage{ঘাটতি আছে?}
+    Shortage -- হ্যাঁ --> PR[অটোমেটিক পারচেজ রিকুইজিশন তৈরি]
+    Shortage -- না --> Ready[ওয়ার্ক অর্ডার রিলিজ করুন]
 ```
 
-Production Plan
-
-```
-1000 Packet
-```
-
-MRP Automatically Calculate করবে
-
-```
-Flour = 250 kg
-
-Sugar = 50 kg
-
-Oil = 20 kg
-
-Milk Powder =10 kg
-```
-
-তারপর Inventory Check করবে।
-
-```
-Flour Stock
-
-200 kg
-
-Need
-
-250 kg
-
-Shortage
-
-50 kg
-```
-
-System Automatically বলবে
-
-Purchase Required
-
-```
-Flour
-
-50 kg
-```
-
-এরপর
-
-Purchase Requisition তৈরি হবে।
+* **ময়দার স্টক হিসাব:** বর্তমান স্টক = ২০০ কেজি | প্রয়োজন = ২৫০ কেজি | **ঘাটতি = ৫০ কেজি** -> *অটোমেটিক পারচেজ রিকুইজিশন (PR) তৈরি হবে*
 
 ---
 
-# MRP-এর Business Logic
+## ৭. পারচেজ রিকুইজিশন ও প্রকিউরমেন্ট
 
-```
-Production Plan
-
-↓
-
-BOM Explosion
-
-↓
-
-Material Requirement
-
-↓
-
-Current Stock
-
-↓
-
-Reserved Stock
-
-↓
-
-Incoming Purchase
-
-↓
-
-Available Stock
-
-↓
-
-Shortage
-
-↓
-
-Purchase Requisition
-```
-
-এটিকে BOM Explosion বলা হয়।
+পারচেজ রিকুইজিশন (PR) ৩টি উপায়ে ট্রিগার হয়: (১) অটোমেটিক MRP থেকে, (২) ম্যানুয়াল এন্ট্রি, (৩) সেফটি স্টক লেভেল (ROP) থেকে। (বিস্তারিত: [Module 03 Spec Guide](./docs/03-mrp-procurement.md))
 
 ---
 
-# ৫. Purchase Requisition
+## ৮. ইনভেন্টরি মুভমেন্ট ও ওয়্যারহাউজ ম্যাট্রিক্স
 
-Purchase Requisition সাধারণত তিনভাবে আসে।
+(বিস্তারিত: [Module 01 Spec Guide](./docs/01-master-data-inventory.md))
 
-### Automatic
+| ইভেন্ট / পর্যায় | র ম্যাটেরিয়াল স্টক | রিজার্ভড স্টক | WIP (চলতি স্টক) | ফিনিশড গুডস স্টক | রিজেক্ট / স্ক্র্যাপ স্টক |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **মালামাল গ্রহণ ও QC পাস** | `+ ইনবাউন্ড` | অপরিবর্তিত | অপরিবর্তিত | অপরিবর্তিত | অপরিবর্তিত |
+| **মালামাল রিজার্ভেশন** | `Available -` | `Reserved +` | অপরিবর্তিত | অপরিবর্তিত | অপরিবর্তিত |
+| **ফ্লোরে ম্যাটেরিয়াল ইস্যু** | `Total -` | `Reserved -` | `WIP +` | অপরিবর্তিত | অপরিবর্তিত |
+| **উৎপাদন সম্পন্ন** | অপরিবর্তিত | অপরিবর্তিত | `WIP -` | অপরিবর্তিত | অপরিবর্তিত |
+| **ফাইনাল QC পাস** | অপরিবর্তিত | অপরিবর্তিত | অপরিবর্তিত | `+ FG Store` | অপরিবর্তিত |
+| **ফাইনাল QC রিজেক্ট** | অপরিবর্তিত | অপরিবর্তিত | অপরিবর্তিত | অপরিবর্তিত | `+ Reject/Scrap` |
 
-MRP থেকে
+---
 
-### Manual
+## ৯. ওয়ার্ক অর্ডার ও শপ ফ্লোর কন্ট্রোল (Shop Floor Execution)
 
-Production Manager থেকে
+(বিস্তারিত: [Module 02 Spec Guide](./docs/02-production-execution.md))
 
-### Minimum Stock Rule
+### লাইফসাইকেল স্ট্যাটাস ফ্লো (State Machine):
+$$\text{Draft} \longrightarrow \text{Planned} \longrightarrow \text{Released} \longrightarrow \text{In Progress} \longrightarrow \text{QC Inspection} \longrightarrow \text{Completed} \longrightarrow \text{Closed}$$
 
-Stock নিচে নেমে গেলে
+---
 
-এরপর Flow
+## ১০. ৩-স্টেজ কোয়ালিটি কন্ট্রোল (Quality Control - QC)
 
-```
-Purchase Requisition
+(বিস্তারিত: [Module 04 Spec Guide](./docs/04-qc-costing-iso.md))
 
-↓
+1. **ইনকামিং QC (Incoming QC):** র ম্যাটেরিয়াল স্টোরে জমা হওয়ার আগে পরীক্ষা।
+2. **ইন-প্রসেস QC (In-Process QC):** মেশিন চলাকালীন নিয়মিত পরীক্ষা।
+3. **ফাইনাল QC (Final Goods QC):** ফিনিশড গুডস স্টোরে পাঠানোর আগে চূড়ান্ত ল্যাব টেস্ট।
 
-Approval
+---
 
-↓
+## ১১. ব্যাচ ম্যানেজমেন্ট ও ট্রেসেবিলিটি (Traceability)
 
-Purchase Order
+(বিস্তারিত: [Module 04 Spec Guide](./docs/04-qc-costing-iso.md))
 
-↓
+---
 
-Receive
+## ১২. ম্যানুফ্যাকচারিং কস্টিং ইঞ্জিন (Costing Engine)
 
-↓
+(বিস্তারিত: [Module 04 Spec Guide](./docs/04-qc-costing-iso.md))
 
-QC
+$$\text{মোট উৎপাদন খরচ} = \text{কাঁচামাল খরচ} + \text{প্যাকিং খরচ} + \text{ডাইরেক্ট লেবার} + \text{মেশিন খরচ} + \text{বিদ্যুৎ বিল} + \text{ওভারহেড} + \text{QC খরচ} + \text{অপচয় কস্ট}$$
 
-↓
+$$\text{ইউনিট কস্ট} = \frac{\text{মোট উৎপাদন খরচ}}{\text{উৎপাদিত ভালো পণ্যের পরিমাণ (Actual Good Quantity)}}$$
 
-Raw Material Stock
+---
+
+## ১৩. সম্পূর্ণ মডিউল রিলেশনশিপ আর্কিটেকচার
+
+```mermaid
+graph TD
+    subgraph Engineering [১. ইঞ্জিনিয়ারিং মাস্টার]
+        PM[প্রোডাক্ট মাস্টার]
+        BOM[বিল অব ম্যাটেরিয়ালস]
+        Routing[রাউটিং ও অপারেশনস]
+        WC[ওয়ার্ক সেন্টার]
+    end
+
+    subgraph Planning [২. প্ল্যানিং ও MRP]
+        Forecast[সেলস ফোরকাস্ট]
+        MPS[মাস্টার শিডিউল]
+        MRP[MRP ইঞ্জিন]
+    end
+
+    subgraph Procurement [৩. প্রকিউরমেন্ট ইন্টিগ্রেশন]
+        PR[পারচেজ রিকুইজিশন]
+        PO[পারচেজ অর্ডার]
+        Rec[মালামাল গ্রহণ / GRN]
+    end
+
+    subgraph Quality [৪. কোয়ালিটি কন্ট্রোল - QC]
+        IQC[ইনকামিং QC]
+        PQC[ইন-প্রসেস QC]
+        FQC[ফাইনাল FG QC]
+    end
+
+    subgraph Floor [৫. প্রোডাকশন এক্সিকিউশন]
+        WO[ওয়ার্ক অর্ডার]
+        Res[ম্যাটেরিয়াল রিজার্ভেশন]
+        Issue[ম্যাটেরিয়াল ইস্যু]
+        Exec[শপ ফ্লোর এক্সিকিউশন]
+        WIP[ওয়ার্ক ইন প্রোগ্রেস]
+    end
+
+    subgraph Inventory [৬. ইনভেন্টরি ও ওয়্যারহাউজ]
+        RM[র ম্যাটেরিয়াল স্টোর]
+        FG[ফিনিশড গুডস স্টোর]
+        Scrap[স্ক্র্যাপ ও রিজেক্ট স্টোর]
+    end
+
+    PM --> BOM & Routing
+    BOM & Routing --> MRP
+    Forecast & MPS --> MRP
+    MRP --> PR
+    PR --> PO --> Rec --> IQC
+    IQC -- পাস --> RM
+    RM --> Res --> Issue --> WO
+    WO --> Exec --> WIP --> PQC
+    PQC -- পাস --> Exec --> FQC
+    FQC -- পাস --> FG
+    FQC -- রিজেক্ট --> Scrap
 ```
 
 ---
 
-# ৬. Inventory Flow
-
-```
-Supplier
-
-↓
-
-Raw Material
-
-↓
-
-QC
-
-↓
-
-Raw Material Store
-
-↓
-
-Reserved
-
-↓
-
-Issue
-
-↓
-
-WIP
-
-↓
-
-QC
-
-↓
-
-Finished Goods
-
-↓
-
-Warehouse
-
-↓
-
-Sales
-```
-
-Stock Movement
-
-| Stage                  | Stock                        |
-| ---------------------- | ---------------------------- |
-| Purchase Receive       | Raw Material +               |
-| Reservation            | Available কমে Reserved বাড়ে |
-| Material Issue         | Raw Material -               |
-| Production Start       | WIP +                        |
-| Production Complete    | WIP -                        |
-| Finished Goods Receive | FG +                         |
-| Reject                 | Reject +                     |
-| Scrap                  | Scrap +                      |
-
----
-
-# ৭. Work Order
-
-Work Order হলো Factory-এর Production Instruction।
-
-এতে থাকে—
-
-* Work Order Number
-* Product
-* BOM Version
-* Batch
-* Quantity
-* Machine
-* Work Center
-* Operator
-* Planned Date
-* Due Date
-* Status
-* QC Plan
-
-Production Team এই Work Order অনুযায়ী কাজ করে।
-
----
-
-# ৮. Quality Control
-
-Enterprise ERP-এ QC তিনটি Stage-এ হয়।
-
-## Incoming QC
-
-Supplier Material
-
-↓
-
-Pass
-
-↓
-
-Raw Material Store
-
-Fail
-
-↓
-
-Return
-
----
-
-## In Process QC
-
-Machine চলাকালীন
-
-↓
-
-Weight
-
-↓
-
-Moisture
-
-↓
-
-Dimension
-
-↓
-
-Temperature
-
-↓
-
-Quality Check
-
----
-
-## Final QC
-
-Finished Goods
-
-↓
-
-Pass
-
-↓
-
-Warehouse
-
-Fail
-
-↓
-
-Reject
-
-↓
-
-Rework
-
-↓
-
-Scrap
-
----
-
-# ৯. Batch / Lot Management
-
-প্রতিটি Batch-এর নিজস্ব পরিচয় থাকে।
-
-উদাহরণ
-
-```
-Batch
-
-BIS250701
-```
-
-এই Batch দিয়ে আপনি জানতে পারবেন
-
-* কোন Flour ব্যবহার হয়েছে
-* কোন Supplier
-* কোন Machine
-* কোন Operator
-* কোন QC Result
-* Manufacturing Date
-* Expiry Date
-
-এটিই Traceability।
-
-Food, Pharma, Chemical Industry-তে এটি বাধ্যতামূলক।
-
----
-
-# ১০. Manufacturing Costing
-
-Enterprise ERP Cost Formula
-
-```
-Raw Material
-
-+
-
-Packaging
-
-+
-
-Direct Labor
-
-+
-
-Machine Cost
-
-+
-
-Electricity
-
-+
-
-Maintenance
-
-+
-
-Factory Overhead
-
-+
-
-Quality Cost
-
-+
-
-Waste Cost
-
-=
-
-Total Production Cost
-```
-
-তারপর
-
-```
-Total Cost
-
-/
-
-Actual Good Quantity
-
-=
-
-Unit Cost
-```
-
----
-
-# ১১. Complete Manufacturing Module Relationship
-
-```
-Engineering
-│
-├── Product Master
-├── Formula / Recipe
-├── Bill of Materials (BOM)
-├── Routing / Operations
-├── Work Centers
-└── Machine Master
-        │
-        ▼
-Production Planning
-        │
-        ├── Sales Forecast
-        ├── Customer Orders
-        └── Master Production Schedule (MPS)
-        │
-        ▼
-Material Requirement Planning (MRP)
-        │
-        ├── BOM Explosion
-        ├── Inventory Check
-        ├── Reserved Stock Check
-        ├── Incoming Purchase Check
-        └── Material Shortage Analysis
-        │
-        ▼
-Purchase Requisition
-        │
-        ▼
-Purchase Order
-        │
-        ▼
-Purchase Receive
-        │
-        ▼
-Incoming Quality Control
-        │
-        ├── Pass → Raw Material Inventory
-        └── Fail → Return / Reject
-                │
-                ▼
-Raw Material Inventory
-        │
-        ▼
-Production Work Order
-        │
-        ├── Material Reservation
-        ├── Material Issue
-        ├── Labor Assignment
-        ├── Machine Allocation
-        └── Batch Allocation
-                │
-                ▼
-Production Execution
-        │
-        ▼
-Work In Progress (WIP)
-        │
-        ▼
-In-Process Quality Control
-        │
-        ├── Pass → Continue Production
-        ├── Rework → Reprocess
-        └── Reject → Scrap / Reject Store
-                │
-                ▼
-Production Completion
-        │
-        ▼
-Finished Goods Quality Control
-        │
-        ├── Pass → Finished Goods Receive
-        ├── Rework → Production
-        └── Reject → Scrap / Reject
-                │
-                ▼
-Finished Goods Inventory
-        │
-        ├── Batch / Lot Tracking
-        ├── Traceability
-        ├── Manufacturing Costing
-        └── Inventory Valuation
-                │
-                ▼
-Sales & Distribution
-        │
-        ▼
-Customer
-```
-
-# Enterprise Best Practices (ISO-Aligned)
-
-আপনার বিদ্যমান ERP-কে Enterprise Grade Manufacturing ERP-এ উন্নীত করতে Manufacturing Layer-এ নিম্নলিখিত বিষয়গুলো রাখা উচিত:
-
-* **Engineering Change Control (ECN/ECO):** BOM বা Recipe পরিবর্তনের জন্য অনুমোদিত Revision Process।
-* **BOM Versioning:** একই Product-এর একাধিক Version ও Effective Date Support।
-* **Production Order Status Flow:** Draft → Planned → Released → In Progress → Completed → QC → Closed → Cancelled।
-* **Material Reservation:** Work Order Release-এর আগে Material Reserve করে Stock Conflict এড়ানো।
-* **Backflush বা Actual Consumption:** Standard Consumption (Backflush) অথবা Actual Consumption Entry—উভয় পদ্ধতির Support।
-* **Yield & Variance Analysis:** Standard Yield বনাম Actual Yield এবং Material Variance বিশ্লেষণ।
-* **Machine & Capacity Planning:** Work Center অনুযায়ী Capacity, Shift এবং Machine Load Balance।
-* **Electronic Batch Record (EBR):** প্রতিটি Batch-এর সম্পূর্ণ Production History সংরক্ষণ।
-* **End-to-End Traceability:** Raw Material Lot → Production Batch → Finished Goods Batch → Customer Delivery পর্যন্ত সম্পূর্ণ Traceability।
-* **Complete Audit Trail:** কে, কখন, কী পরিবর্তন করেছে তার পূর্ণ ইতিহাস (ISO Audit-এর জন্য অত্যন্ত গুরুত্বপূর্ণ)।
-
+## ১৪. আইএসও (ISO) এন্টারপ্রাইজ বেস্ট প্র্যাকটিস
+
+(বিস্তারিত: [Module 04 Spec Guide](./docs/04-qc-costing-iso.md))
+
+1. **ইঞ্জিনিয়ারিং চেঞ্জ কন্ট্রোল (ECN/ECO):** BOM বা রেসিপি পরিবর্তনের জন্য প্রাতিষ্ঠানিক অনুমোদিত প্রসেস।
+2. **BOM ভার্সনিং:** একই প্রোডাক্টের একাধিক active/inactive ভার্সন রাখার সুবিধা।
+3. **কঠোর ডকুমেন্ট স্ট্যাটাস ফ্লো:** Draft → Planned → Released → In Progress → Completed → Closed।
+4. **ম্যাটেরিয়াল রিজার্ভেশন:** ওয়ার্ক অর্ডার রিলিজের আগে কাঁচামাল রিজার্ভ করে স্টক দ্বন্দ্ব এড়ানো।
+5. **ব্যাকফ্লাশ ও একচুয়াল কনসাম্পশন:** Standard/Actual Consumption Support।
+6. **ইল্ড ও ভ্যারিয়েন্স অ্যানালাইসিস:** Standard Yield বনাম Actual Yield।
+7. **মেশিন ও ক্যাপাসিটি প্ল্যানিং:** Capacity, Shift এবং Machine Load Balancing।
+8. **ইলেকট্রনিক ব্যাচ রেকর্ড (EBR):** প্রতিটি ব্যাচের ডিজিটাল হিস্ট্রি সংরক্ষণ।
+9. **এন্ড-টু-এন্ড ট্রেসেবিলিটি:** Raw Material Lot → Production Batch → FG Batch → Customer।
+10. **সিস্টেম অডিট ট্রেইল (Audit Trail):** কে, কখন, কী পরিবর্তন করেছে তার সম্পূর্ণ ইতিহাস।
